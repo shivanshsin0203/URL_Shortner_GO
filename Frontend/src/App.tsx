@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import "./App.css"
 const Login = () => {
   
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [auth, setAuth] = useState(false);
+  const [url, setUrl] = useState('');
+  const [shortUrl, setShortUrl] = useState('');
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -43,8 +45,47 @@ const Login = () => {
       
     }
   }, []);
+  const handleUrlShorten = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post<{ shortUrl: string }>(
+        'http://localhost:8080/shorten',
+        { url },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      console.log(response)
+      setShortUrl(response.data.shortUrl);
+      setMessage('URL shortened successfully!');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error:any) {
+      if (error.response && error.response.status === 429) {
+        setMessage('Rate limit exceeded. Please try again later.');
+    } else {
+        setMessage('Failed to shorten URL. Please try again.' + error);
+    }
+    }
+  };
   return (
-    <div>{auth ? <h2>Logged in</h2> :<div><h2>Login</h2>
+    <div className="container">{auth ? <div><h2>Logged in</h2>
+      <form onSubmit={handleUrlShorten}>
+        <input
+          type="url"
+          placeholder="Enter your URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          required
+        />
+        <button type="submit">Shorten URL</button>
+      </form>
+      {message && <p>{message}</p>}
+      {shortUrl && (
+        <p>
+          Shortened URL: <a href={shortUrl} target="_blank" rel="noopener noreferrer">{shortUrl}</a>
+        </p>
+      )}</div> :<div><h2>Login</h2>
       <form onSubmit={handleLogin}>
         <input
           type="email"
