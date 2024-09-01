@@ -9,6 +9,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post<{ token: string }>('http://localhost:8080/login', { email });
+      console.log(response)
       const token = response.data.token;
 
       
